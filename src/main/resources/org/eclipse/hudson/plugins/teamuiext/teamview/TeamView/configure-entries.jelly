@@ -1,0 +1,30 @@
+<!-- **************************************************************************
+* Copyright (c) 2014 Henrik Lynggaard Hansen
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributors:
+*    Henrik Lynggaard Hansen - initial code
+*************************************************************************** --> 
+<j:jelly xmlns:j="jelly:core"  xmlns:f="/lib/form">
+  
+ <f:section title="Team">
+    <f:entry title="Team Name" field="teamName"
+             description="Team Name">
+        <f:textbox name="teamview.teamname" value="${it.teamName}" checkUrl="'${rootURL}/descriptorByName/TeamView/checkUrl?value='+escape(this.value)"/>
+    </f:entry>
+  </f:section>
+ 
+  <f:section title="${%Columns}">
+    <j:invokeStatic var="allColumns" className="hudson.views.ListViewColumn" method="all"/>
+    <f:block>
+      <f:hetero-list name="columns" hasHeader="true"
+                     descriptors="${allColumns}"
+                     items="${it.columns}"
+                     addCaption="${%Add column}"/>
+    </f:block>
+  </f:section>
+</j:jelly>
