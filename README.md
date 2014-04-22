@@ -7,6 +7,6 @@ This plugin adds two new UI items
 is included in the view
 
 * Team Aware Views TabBar: A ViewTab replacement that filters the visible tabs. 
-** If a view is a team view, display only if the user has access
-** If other view type display only if has jobs
+  * If a view is a team view, display only if the user has access
+  * If other view type display only if has jobs
 
