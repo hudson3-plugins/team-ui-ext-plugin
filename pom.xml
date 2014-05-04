@@ -10,7 +10,7 @@
 
     <groupId>org.hudsonci.plugins</groupId>
     <artifactId>team-ui-ext</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.1</version>
     <packaging>hpi</packaging>
     <name>Team Aware UI Extentions</name>
     <description>Provides UI extentions which are team aware</description>
