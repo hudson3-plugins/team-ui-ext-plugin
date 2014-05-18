@@ -23,7 +23,7 @@ A ViewTab which puts two rows of tab. Upper row is a list of projects and lower 
 
 The visibility of a tab is the same as for the "Team Aware Views TabBar"
 
-This TabBar grew out of our usage where we have a team for each environment in each project, so with team views the number of tabs grew rapidly. Our teams are always named "<project>_<environment>" and people generally belong to a subset of the project hence no need to see the other projects
+This TabBar grew out of our usage where we have a team for each environment in each project, so with team views the number of tabs grew rapidly. Our teams are always named "(project)_(environment)" and people generally belong to a subset of the project hence no need to see the other projects
 
 
 
