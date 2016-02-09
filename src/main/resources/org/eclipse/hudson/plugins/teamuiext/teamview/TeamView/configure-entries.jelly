@@ -11,10 +11,14 @@
 *************************************************************************** --> 
 <j:jelly xmlns:j="jelly:core"  xmlns:f="/lib/form">
   
- <f:section title="Team">
+ <f:section title="Filtering">
     <f:entry title="Team Name" field="teamName"
-             description="Team Name">
-        <f:textbox name="teamview.teamname" value="${it.teamName}" checkUrl="'${rootURL}/descriptorByName/TeamView/checkUrl?value='+escape(this.value)"/>
+             description="name of the team to show jobs for">
+        <f:textbox name="teamview.teamname" value="${it.teamName}" checkUrl="'${rootURL}/descriptorByName/TeamView/checkUrl?value='+escape(this.value)"/>        
+    </f:entry>
+    <f:entry title="Filter" field="filter"
+             description="Regular expression to show only some of the jobs in the team">
+        <f:textbox name="teamview.filter" value="${it.filter}" checkUrl="'${rootURL}/descriptorByName/TeamView/regExpCheck?value='+escape(this.value)"/>        
     </f:entry>
   </f:section>
  

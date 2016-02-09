@@ -29,10 +29,12 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import hudson.Util;
+import java.util.regex.Pattern;
 
 public class TeamView extends ListView {
 
     private String teamName;
+    private String filter;
 
     @DataBoundConstructor
     public TeamView(String name) {
@@ -41,6 +43,10 @@ public class TeamView extends ListView {
 
     public String getTeamName() {
         return this.teamName;
+    }
+    
+    public String getFilter() {
+        return filter != null ? filter : "";
     }
 
     @Override
@@ -53,7 +59,14 @@ public class TeamView extends ListView {
         }
 
         List<TopLevelItem> result = new ArrayList<TopLevelItem>(team.getJobNames().size());
+        Pattern regexp = null; 
+        if (filter != null) {
+            regexp = Pattern.compile(filter);
+        }
         for (String jobName : team.getJobNames()) {
+            if (regexp != null && !regexp.matcher(jobName).matches()) {
+                continue;
+            }
             TopLevelItem item = Hudson.getInstance().getItem(jobName);
             result.add(item);
         }
@@ -63,6 +76,7 @@ public class TeamView extends ListView {
     @Override
     protected void submit(StaplerRequest req) throws ServletException, Descriptor.FormException, IOException {
         teamName = req.getParameter("teamview.teamname");
+        filter = Util.fixEmpty(req.getParameter("teamview.filter"));
         super.submit(req);
     }
 
@@ -92,6 +106,26 @@ public class TeamView extends ListView {
                 }
             }.check();
         }
+        
+        public FormValidation doRegExpCheck(@QueryParameter final String value)
+                throws IOException, ServletException {
+            return new FormValidation.URLCheck() {
+                @Override
+                protected FormValidation check() throws IOException,
+                        ServletException {
+                    String filter_new = Util.fixEmpty(value);
+                    if (filter_new == null) {
+                        return FormValidation.ok();
+                    }
+                    try {
+                        Pattern.compile(filter_new);
+                        return FormValidation.ok();
+                    } catch (Exception e) {
+                        return FormValidation.error("RegExp pattern does compile " + e.getMessage());
+                    }
+                }
+            }.check();
+        }        
 
     }
 }

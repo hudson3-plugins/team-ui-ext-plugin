@@ -17,9 +17,12 @@ import hudson.model.Hudson;
 import hudson.model.View;
 import hudson.views.ViewsTabBar;
 import hudson.views.ViewsTabBarDescriptor;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import net.sf.json.JSONObject;
 import org.eclipse.hudson.plugins.teamuiext.teamview.TeamView;
@@ -34,6 +37,105 @@ public class ProjectTeamViewTabBar extends ViewsTabBar {
         
     }
 
+    public List<SortedMap<String, ViewHolder> >  getTabs(List<View> views, View currentView) {
+        DescriptorImpl descriptor = (DescriptorImpl) getDescriptor();
+        String delimiter = descriptor.getDelimiter();
+        
+        if (views == null || currentView == null) {
+            System.out.println("INPUT TO PLUGIN IS NULL"  + views + ", " + currentView);
+        }             
+        
+        List<SortedMap<String, ViewHolder> > result = new ArrayList<SortedMap<String, ViewHolder>>();
+        
+        String[] currentViewnameParts = currentView.getViewName().split(delimiter);
+
+        //System.out.println("---- START of PLUGIN ---");
+        debugArray("Current view parts ", currentViewnameParts);
+                
+        for (View v : views) {
+           if (!checkView(v, currentView)) {
+                continue;
+            }            
+            String[] parts = v.getViewName().split(delimiter);
+
+            debugArray("Evaluation view parts ", parts);
+            
+            
+            for (int i=0; i<parts.length; i++) {                
+                boolean isCurrent = v == currentView;
+                
+                //System.out.println("Part " + i +"=" +parts[i]+ "," + isLast + ", " + isCurrent);
+                
+              
+                boolean hasPreviousLevelsMatched = isCurrent  || hasPreviousLevelsMatched(currentViewnameParts, parts, i);
+                //System.out.println("hasPreviousLevelsMatched: " + isCurrent + ", " + hasPreviousLevelsMatched(currentViewnameParts, parts, i));
+                if (hasPreviousLevelsMatched) {
+                    SortedMap<String, ViewHolder> viewHolderCollection = getViewHolderCollection(result, i);
+                    ViewHolder currentVh = viewHolderCollection.get(parts[i]);
+                    if (currentVh == null) {
+                        currentVh = new ViewHolder();
+                        currentVh.name = parts[i];
+                        currentVh.url = v.getAbsoluteUrl();
+                        currentVh.active = false;
+                        viewHolderCollection.put(currentVh.name, currentVh);                        
+                    }
+                    if (isCurrent) {
+                        currentVh.active=true;
+                    }
+                }               
+            }
+           
+        }
+        debugResult(result);
+        //System.out.println("---- END of PLUGIN --- " +result.size());
+        return result;
+    }
+        
+    private SortedMap<String, ViewHolder>  getViewHolderCollection(List<SortedMap<String, ViewHolder> > result, int index) {
+        
+        if (result.size() > index) {
+            return result.get(index);
+        }
+        //System.out.println("Creating collection for index:" +index);
+        SortedMap<String, ViewHolder> viewHolderCollection = new TreeMap<String, ViewHolder>();
+        result.add(viewHolderCollection);
+        return viewHolderCollection;        
+    }
+    private boolean hasPreviousLevelsMatched(String[] currentViewParts, String[] evaluationViewParts, int index) {
+        if (index == 0) {
+            return true;
+        }
+        for (int i=0; i<index; i++) {
+            if (currentViewParts.length<=i || !currentViewParts[i].equals(evaluationViewParts[i])) {
+                return false;
+            }
+        }
+        return true;        
+    }
+        
+   private void debugArray(String prefix, String[] arr) {
+//       StringBuilder sb = new StringBuilder(prefix);
+//       for (int i=0; i<arr.length; i++) {
+//           sb.append(i).append(":").append(arr[i]).append(", ");
+//       }
+//       System.out.println(sb.toString());
+   }
+   
+    private void debugResult(List<SortedMap<String, ViewHolder> > result) {
+//        StringBuilder sb = new StringBuilder("Plugin result: ");
+//        
+//        for (int i=0; i<result.size(); i++) {
+//            SortedMap<String, ViewHolder> row = result.get(i);
+//            sb.append("\n row:").append(i).append(" [ ");
+//            for (Map.Entry<String, ViewHolder> vh : row.entrySet()) {
+//                sb.append(vh.getValue()).append(", ");
+//            }
+//            sb.append("]");
+//        }
+//        System.out.println(sb.toString());             
+    }   
+        
+    
     public Collection<ViewHolder> getProjects(List<View> views, View currentView) {
         DescriptorImpl descriptor = (DescriptorImpl) getDescriptor();
         SortedSet<ViewHolder> result = new TreeSet<ViewHolder>();
@@ -51,7 +153,7 @@ public class ProjectTeamViewTabBar extends ViewsTabBar {
             String[] parts = v.getViewName().split(descriptor.getDelimiter(), 2);
 
             vh.name = parts.length > 1 ? parts[0] : "Other";
-            vh.url = v.getUrl();
+            vh.url = v.getAbsoluteUrl();
             vh.active = parentName.equals(vh.name);
             result.add(vh);
         }
@@ -92,11 +194,18 @@ public class ProjectTeamViewTabBar extends ViewsTabBar {
         }
         if (view instanceof TeamView) {
             TeamView tv = (TeamView) view;
-            return Hudson.getInstance().getTeamManager().isCurrentUserHasAccessToTeam(tv.getTeamName());
+            try {
+                return Hudson.getInstance().getTeamManager().isCurrentUserHasAccessToTeam(tv.getTeamName());
+            } catch (NullPointerException npe) {
+                System.out.println("View Config problem: Cannot find team for view: " +tv.getTeamName());
+                return false;
+            }
         }
 
         return view.getItems().size() > 0;
     }
+
+
 
     @Extension
     public static class DescriptorImpl extends ViewsTabBarDescriptor {
@@ -115,7 +224,7 @@ public class ProjectTeamViewTabBar extends ViewsTabBar {
         }
 
         public String getDelimiter() {
-            return delimiter != null ?delimiter : "_";
+            return delimiter != null ? delimiter : "_";
         }
         
         
